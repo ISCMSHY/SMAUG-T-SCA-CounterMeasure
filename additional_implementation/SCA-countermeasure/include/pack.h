@@ -41,7 +41,14 @@ void bytes_to_Rp_vec(polyvec *data, const uint8_t bytes[CTPOLYVEC_BYTES]);
 
 #define Sx_to_bytes SMAUG_NAMESPACE(Sx_to_bytes)
 void Sx_to_bytes(uint8_t *bytes, const uint8_t *data, const uint8_t data_len);
+
+#define CM_Sx_to_bytes SMAUG_NAMESPACE(CM_Sx_to_bytes)
+void CM_Sx_to_bytes(uint8_t *bytes, const uint8_t *data, const uint16_t data_len);
+
 #define bytes_to_Sx SMAUG_NAMESPACE(bytes_to_Sx)
 void bytes_to_Sx(uint8_t *data, const uint8_t *bytes, const uint8_t bytes_len);
+
+#define CM_bytes_to_Sx SMAUG_NAMESPACE(CM_bytes_to_Sx)
+void CM_bytes_to_Sx(uint8_t *data, const uint8_t *bytes, const uint16_t bytes_len);
 
 #endif // SMAUG_PACK_H

@@ -56,6 +56,30 @@ void save_to_string_sk(uint8_t *output, const secret_key *sk) {
     }
 }
 
+void CM_save_to_string_sk(uint8_t *output, const secret_key *sk) {
+    size_t idx = 0;
+
+    // cnt 값 저장
+    for (size_t i = 0; i < MODULE_RANK; ++i) {
+        cmov(output + idx, &(sk->sp_vec[i].cnt), sizeof(uint8_t), 1);
+        idx += sizeof(uint8_t);
+    }
+
+    // sx 값 저장
+    for (size_t i = 0; i < MODULE_RANK; ++i) {
+//        Sx_to_bytes(output + idx, sk->sp_vec[i].sx, 288);
+        CM_Sx_to_bytes(output + idx, sk->sp_vec[i].sx, 288);
+        idx += 288;
+    }
+
+    // neg_start 값 저장
+    for (size_t i = 0; i < MODULE_RANK; ++i) {
+        cmov(output + idx, &(sk->sp_vec[i].neg_start), sizeof(uint8_t), 1);
+        idx += sizeof(uint8_t);
+    }
+}
+
+
 void save_to_file_sk(char *file_path, const uint8_t *sk, const int isPKE) {
     FILE *f = fopen(file_path, "wb");
     if (f == NULL) {
@@ -82,6 +106,31 @@ void load_from_string_sk(secret_key *sk, const uint8_t *input) {
         idx += sk->sp_vec[i].cnt;
     }
 
+    for (size_t i = 0; i < MODULE_RANK; ++i) {
+        cmov(&(sk->sp_vec[i].neg_start), input + idx, sizeof(uint8_t), 1);
+        idx += sizeof(uint8_t);
+    }
+}
+
+void CM_load_from_string_sk(secret_key *sk, const uint8_t *input) {
+    size_t idx = 0;
+
+    // cnt 값 가져오기
+    for (size_t i = 0; i < MODULE_RANK; ++i) {
+        cmov(&(sk->sp_vec[i].cnt), input + idx, sizeof(uint8_t), 1);
+        sk->sp_vec[i].sx =
+            (uint8_t *)calloc(288, sizeof(uint8_t));
+        idx += sizeof(uint8_t);
+    }
+
+    // sx 값 가져오기
+    for (size_t i = 0; i < MODULE_RANK; ++i) {
+//        bytes_to_Sx(sk->sp_vec[i].sx, input + idx, 288);
+        CM_bytes_to_Sx(sk->sp_vec[i].sx, input + idx, 288);
+        idx += 288;
+    }
+
+    // neg_start 값 가져오기
     for (size_t i = 0; i < MODULE_RANK; ++i) {
         cmov(&(sk->sp_vec[i].neg_start), input + idx, sizeof(uint8_t), 1);
         idx += sizeof(uint8_t);

@@ -339,6 +339,11 @@ void Sx_to_bytes(uint8_t *bytes, const uint8_t *data, const uint8_t data_len) {
     cmov(bytes, data, data_len, 1);
 }
 
+void CM_Sx_to_bytes(uint8_t *bytes, const uint8_t *data, const uint16_t data_len) {
+    cmov(bytes, data, data_len, 1);
+}
+
+
 /*************************************************
  * Name:        bytes_to_Sx
  *
@@ -349,5 +354,9 @@ void Sx_to_bytes(uint8_t *bytes, const uint8_t *data, const uint8_t data_len) {
  *              - uint16_t *bytes: pointer to input bytes
  **************************************************/
 void bytes_to_Sx(uint8_t *data, const uint8_t *bytes, const uint8_t bytes_len) {
+    cmov(data, bytes, bytes_len, 1);
+}
+
+void CM_bytes_to_Sx(uint8_t *data, const uint8_t *bytes, const uint16_t bytes_len) {
     cmov(data, bytes, bytes_len, 1);
 }

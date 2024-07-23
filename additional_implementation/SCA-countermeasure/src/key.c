@@ -39,7 +39,8 @@ void genBx(polyvec *b, const polyvec A[MODULE_RANK],
     addGaussianErrorVec(b, e_seed);
 
     // b = -a * s + e
-    matrix_vec_mult_sub(b, A, s_vec, 0);
+//    matrix_vec_mult_sub(b, A, s_vec, 0);
+    CM_matrix_vec_mult_sub(b, A, s_vec, 0);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -59,13 +60,37 @@ void genSx_vec(secret_key *sk, const uint8_t seed[CRYPTO_BYTES]) {
     uint8_t res[DIMENSION] = {0};
     uint8_t cnt_arr[MODULE_RANK] = {0};
 
+//    int sk_size = 90 + (90 / 8) + 1;
+//    int sk_size = 256 + 32; // key size + 부호 정보
+    uint16_t sk_size = 256;
+    uint8_t dummy = 32;
+
     hwt(res, cnt_arr, seed, CRYPTO_BYTES, HS);
+
+    // cnt_arr가 10의 배수가 되도록 조정, 아니면 어차피 256이니까 128로 고정을 해서 곱셈 연산을 진행해도 괜찮을 듯 하다
 
     for (size_t i = 0; i < MODULE_RANK; ++i) {
         (sk->sp_vec[i]).cnt = cnt_arr[i];
-        (sk->sp_vec[i]).sx = (uint8_t *)calloc(cnt_arr[i], sizeof(uint8_t));
+
+//        (sk->sp_vec[i]).sx = (uint8_t *)calloc(cnt_arr[i], sizeof(uint8_t));
+        (sk->sp_vec[i]).sx = (uint8_t *)calloc(sk_size + dummy, sizeof(uint8_t));
+
+//        (sk->sp_vec[i]).neg_start = convToIdx(
+//            (sk->sp_vec[i]).sx, (sk->sp_vec[i]).cnt, res + (i * LWE_N), LWE_N);
+
         (sk->sp_vec[i]).neg_start = convToIdx(
-            (sk->sp_vec[i]).sx, (sk->sp_vec[i]).cnt, res + (i * LWE_N), LWE_N);
+            (sk->sp_vec[i]).sx, sk_size - 1, res + (i * LWE_N), LWE_N);
+
+//        printf("add : %d\n", (sk->sp_vec[i]).neg_start);
+//        printf("sub : %d\n", (sk->sp_vec[i]).cnt - (sk->sp_vec[i]).neg_start);
+//        for (int j = 0; j < LWE_N; j++) {
+//            printf("%d ", (sk->sp_vec[i]).sx[j]);
+//        }
+//        printf("\n\n");
+//        for (size_t k = 0; k < 32; k++) {
+//            printf("%d, ", (sk->sp_vec[i]).sx[256 + k]);
+//        }
+//        printf("\n\n");
     }
 }
 
@@ -131,13 +156,14 @@ int checkSanity(const public_key *pk, const secret_key *sk) {
     if (sk == NULL)
         return 0;
 
-    for (int i = 0; i < MODULE_RANK; ++i) {
-        if ((sk->sp_vec[i]).neg_start > HS) {
-            printf("*** ERROR: sk->neg_start[%d] cannot be larger than %d\n", i,
-                   HS);
-            return 1;
-        }
-    }
+// neg start 사용 안함
+//    for (int i = 0; i < MODULE_RANK; ++i) {
+//        if ((sk->sp_vec[i]).neg_start > HS) {
+//            printf("*** ERROR: sk->neg_start[%d] cannot be larger than %d\n", i,
+//                   HS);
+//            return 1;
+//        }
+//    }
 
     return 0;
 }

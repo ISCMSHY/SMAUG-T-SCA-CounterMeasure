@@ -26,16 +26,34 @@ uint8_t convToIdx(uint8_t *res, const uint8_t res_length, const uint8_t *op,
 
 #define poly_mult_add SMAUG_NAMESPACE(poly_mult_add)
 void poly_mult_add(poly *res, const poly *op1, const sppoly *op2);
+
+#define CM_poly_mult_add SMAUG_NAMESPACE(CM_poly_mult_add)
+void CM_poly_mult_add(poly *res, const poly *op1, const sppoly *op2);
+
 #define poly_mult_sub SMAUG_NAMESPACE(poly_mult_sub)
 void poly_mult_sub(poly *res, const poly *op1, const sppoly *op2);
+
+#define CM_poly_mult_sub SMAUG_NAMESPACE(CM_poly_mult_sub)
+void CM_poly_mult_sub(poly *res, const poly *op1, const sppoly *op2);
+
 #define vec_vec_mult_add SMAUG_NAMESPACE(vec_vec_mult_add)
 void vec_vec_mult_add(poly *res, const polyvec *op1,
                       const sppoly op2[MODULE_RANK]);
+
+#define CM_vec_vec_mult_add SMAUG_NAMESPACE(CM_vec_vec_mult_add)
+void CM_vec_vec_mult_add(poly *res, const polyvec *op1,
+                      const sppoly op2[MODULE_RANK]);
+
 #define matrix_vec_mult_add SMAUG_NAMESPACE(matrix_vec_mult_add)
 void matrix_vec_mult_add(polyvec *res, const polyvec op1[MODULE_RANK],
                          const sppoly op2[MODULE_RANK], int16_t transpose);
+
 #define matrix_vec_mult_sub SMAUG_NAMESPACE(matrix_vec_mult_sub)
 void matrix_vec_mult_sub(polyvec *res, const polyvec op1[MODULE_RANK],
+                         const sppoly op2[MODULE_RANK], int16_t transpose);
+
+#define CM_matrix_vec_mult_sub SMAUG_NAMESPACE(CM_matrix_vec_mult_sub)
+void CM_matrix_vec_mult_sub(polyvec *res, const polyvec op1[MODULE_RANK],
                          const sppoly op2[MODULE_RANK], int16_t transpose);
 
 void poly_reduce_keyGen(poly *res, const uint16_t temp[2 * LWE_N]);

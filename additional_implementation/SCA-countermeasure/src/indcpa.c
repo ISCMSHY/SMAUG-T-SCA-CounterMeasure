@@ -56,7 +56,8 @@ void indcpa_keypair(uint8_t pk[PUBLICKEY_BYTES],
     memset(pk, 0, PUBLICKEY_BYTES);
     memset(sk, 0, PKE_SECRETKEY_BYTES);
     save_to_string_pk(pk, &pk_tmp);
-    save_to_string_sk(sk, &sk_tmp);
+//    save_to_string_sk(sk, &sk_tmp);
+    CM_save_to_string_sk(sk, &sk_tmp);
 
     for (size_t i = 0; i < MODULE_RANK; ++i) {
         memset(sk_tmp.sp_vec[i].sx, 0, sk_tmp.sp_vec[i].cnt);
@@ -130,7 +131,9 @@ void indcpa_dec(uint8_t delta[DELTA_BYTES],
 
     secret_key sk_tmp;
     memset(&sk_tmp, 0, sizeof(secret_key));
-    load_from_string_sk(&sk_tmp, sk);
+
+//    load_from_string_sk(&sk_tmp, sk);
+    CM_load_from_string_sk(&sk_tmp, sk);
 
     ciphertext ctxt_tmp;
     load_from_string(&ctxt_tmp, ctxt);
@@ -144,7 +147,8 @@ void indcpa_dec(uint8_t delta[DELTA_BYTES],
             c1_temp.vec[i].coeffs[j] <<= _16_LOG_P;
 
     // Compute delta = (delta + c1^T * s)
-    vec_vec_mult_add(&delta_temp, &c1_temp, sk_tmp.sp_vec);
+//    vec_vec_mult_add(&delta_temp, &c1_temp, sk_tmp.sp_vec);
+    CM_vec_vec_mult_add(&delta_temp, &c1_temp, sk_tmp.sp_vec);
 
     // Compute delta = 2/p * delta
     for (uint16_t i = 0; i < LWE_N; ++i) {

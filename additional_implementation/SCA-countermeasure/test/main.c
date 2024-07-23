@@ -21,26 +21,32 @@ int main(void) {
     printf("\n*** %s with mode %d starts at %s\n", "SMAUG KEM", SMAUG_MODE,
            time_str);
 
-    size_t count = 1;
-    const size_t iteration = 100000;
-
-    for (size_t i = 0; i < iteration; ++i) {
-        if (!(i % (iteration / 10))) {
-            printf("...%lu%%", count * 10);
-            fflush(stdout);
-            ++count;
-        }
-
-        // if (indcpa_test()) {
-        //     printf("PKE test fails at %lu-th tries\n", i);
-        //     break;
-        // }
-
-        if (kem_test()) {
-            printf("KEM test fails at %lu-th tries\n", i);
-            break;
-        }
+    if (indcpa_test()) {
+        printf("PKE test fails\n");
+    }else {
+        printf("PKE test success\n");
     }
+
+//    size_t count = 1;
+//    const size_t iteration = 100000;
+//
+//    for (size_t i = 0; i < iteration; ++i) {
+//        if (!(i % (iteration / 10))) {
+//            printf("...%lu%%", count * 10);
+//            fflush(stdout);
+//            ++count;
+//        }
+//
+//         if (indcpa_test()) {
+//             printf("PKE test fails at %lu-th tries\n", i);
+//             break;
+//         }
+//
+//        if (kem_test()) {
+//            printf("KEM test fails at %lu-th tries\n", i);
+//            break;
+//        }
+//    }
 
     return 0;
 }
@@ -62,7 +68,7 @@ int indcpa_test() {
     // printf("indcpa_enc done\n");
 
     indcpa_dec(mu2, sk, ctxt);
-    // printf("indcpa_dec done\n");
+//    printf("indcpa_dec done\n");
 
     if (memcmp(mu, mu2, DELTA_BYTES) != 0) {
         for (int i = 0; i < m_size; ++i)

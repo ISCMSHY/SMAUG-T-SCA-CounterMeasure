@@ -22,10 +22,19 @@ void load_from_file(uint8_t *ctxt, const char *file_path);
 // For secret key
 #define save_to_string_sk SMAUG_NAMESPACE(save_to_string_sk)
 void save_to_string_sk(uint8_t *output, const secret_key *sk);
+
+#define CM_save_to_string_sk SMAUG_NAMESPACE(CM_save_to_string_sk)
+void CM_save_to_string_sk(uint8_t *output, const secret_key *sk);
+
 #define save_to_file_sk SMAUG_NAMESPACE(save_to_file_sk)
 void save_to_file_sk(char *file_path, const uint8_t *sk, const int isPKE);
+
 #define load_from_string_sk SMAUG_NAMESPACE(load_from_string_sk)
 void load_from_string_sk(secret_key *sk, const uint8_t *input);
+
+#define CM_load_from_string_sk SMAUG_NAMESPACE(CM_load_from_string_sk)
+void CM_load_from_string_sk(secret_key *sk, const uint8_t *input);
+
 #define load_from_file_sk SMAUG_NAMESPACE(load_from_file_sk)
 void load_from_file_sk(uint8_t *sk, const char *file_path, const int isPKE);
 

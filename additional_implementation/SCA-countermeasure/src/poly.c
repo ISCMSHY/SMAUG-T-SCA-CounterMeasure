@@ -49,7 +49,6 @@ poly_reduce(poly *res, const uint16_t temp[2 * LWE_N]) {
     }
 }
 
-
 void poly_reduce_keyGen(poly *res, const uint16_t temp[2 * LWE_N]) {
 	uint8_t index[LWE_N] = { 0, };
 	int tp = 0;
@@ -78,7 +77,7 @@ void poly_reduce_keyGen(poly *res, const uint16_t temp[2 * LWE_N]) {
  *                to second input polynomial
  **************************************************/
 void poly_mult_add(poly *res, const poly *op1, const sppoly *op2) {
-    uint16_t temp[LWE_N * 2] = {0};
+    uint16_t temp[LWE_N * 3] = {0};
 
     for (size_t j = 0; j < op2->neg_start; ++j) {
         poly_add(temp, op1, (op2->sx)[j]);
@@ -87,6 +86,29 @@ void poly_mult_add(poly *res, const poly *op1, const sppoly *op2) {
     for (size_t j = op2->neg_start; j < op2->cnt; ++j) {
         poly_sub(temp, op1, (op2->sx)[j]);
     }
+
+    poly_reduce(res, temp);
+}
+
+void CM_poly_mult_add(poly *res, const poly *op1, const sppoly *op2) {
+    uint16_t temp[LWE_N * 3] = {0};
+
+//    for (size_t j = 0; j < op2->neg_start; ++j) {
+//        poly_add(temp, op1, (op2->sx)[j]);
+//    }
+//
+//    for (size_t j = op2->neg_start; j < op2->cnt; ++j) {
+//        poly_sub(temp, op1, (op2->sx)[j]);
+//    }
+
+    for (size_t j = 0; j < 128; j++) {
+        poly_add(temp, op1, (op2->sx)[j] + 256 * ((op2->sx)[32 + j / 8] >> (7 - j % 8) & 1 ^ 1));
+    }
+
+    for (size_t j = 128; j < 256; j++) {
+        poly_sub(temp, op1, (op2->sx)[j] + 256 * ((op2->sx)[32 + j / 8] >> (7 - j % 8) & 1 ^ 1));
+    }
+
     poly_reduce(res, temp);
 }
 
@@ -117,6 +139,19 @@ void poly_mult_sub(poly *res, const poly *op1, const sppoly *op2) {
     poly_reduce_keyGen(res, temp);	
 }
 
+void CM_poly_mult_sub(poly *res, const poly *op1, const sppoly *op2) {
+    uint16_t temp[LWE_N * 3] = {0};
+
+    for (size_t j = 0; j < 128; j++) {
+        poly_sub(temp, op1, (op2->sx)[j] + 256 * ((op2->sx)[32 + j / 8] >> (7 - j % 8) & 1 ^ 1));
+    }
+
+    for (size_t j = 128; j < 256; j++) {
+        poly_add(temp, op1, (op2->sx)[j] + 256 * ((op2->sx)[32 + j / 8] >> (7 - j % 8) & 1 ^ 1));
+    }
+    poly_reduce_keyGen(res, temp);
+}
+
 /*************************************************
  * Name:        matrix_vec_mult_add
  *
@@ -138,6 +173,8 @@ void poly_mult_sub(poly *res, const poly *op1, const sppoly *op2) {
  **************************************************/
 void matrix_vec_mult_add(polyvec *res, const polyvec op1[MODULE_RANK],
                          const sppoly op2[MODULE_RANK], int16_t transpose) {
+//    poly_mult_add(&(res->vec[0]), &(op1[0].vec[0]), &(op2[0]));
+
     for (int i = 0; i < MODULE_RANK; i++) {
         for (int j = 0; j < MODULE_RANK; j++) {
             if (transpose == 1) {
@@ -182,6 +219,20 @@ void matrix_vec_mult_sub(polyvec *res, const polyvec op1[MODULE_RANK],
     }
 }
 
+void CM_matrix_vec_mult_sub(polyvec *res, const polyvec op1[MODULE_RANK],
+                         const sppoly op2[MODULE_RANK], int16_t transpose) {
+
+    for (int i = 0; i < MODULE_RANK; i++) {
+        for (int j = 0; j < MODULE_RANK; j++) {
+            if (transpose == 1) {
+                CM_poly_mult_sub(&(res->vec[i]), &(op1[j].vec[i]), &(op2[j]));
+            } else {
+                CM_poly_mult_sub(&(res->vec[i]), &(op1[i].vec[j]), &(op2[j]));
+            }
+        }
+    }
+}
+
 /*************************************************
  * Name:        vec_vec_mult_add
  *
@@ -201,8 +252,15 @@ void matrix_vec_mult_sub(polyvec *res, const polyvec op1[MODULE_RANK],
  **************************************************/
 void vec_vec_mult_add(poly *res, const polyvec *op1,
                       const sppoly op2[MODULE_RANK]) {
+
     for (int j = 0; j < MODULE_RANK; j++) {
         poly_mult_add(res, &(op1->vec[j]), &(op2[j]));
+    }
+}
+
+void CM_vec_vec_mult_add(poly *res, const polyvec *op1, const sppoly op2[MODULE_RANK]) {
+    for (int j = 0; j < MODULE_RANK; j++) {
+        CM_poly_mult_add(res, &(op1->vec[j]), &(op2[j]));
     }
 }
 
@@ -224,13 +282,19 @@ void vec_vec_mult_add(poly *res, const polyvec *op1,
 uint8_t convToIdx(uint8_t *res, const uint8_t res_length, const uint8_t *op,
                   const size_t op_length) {
     uint8_t index = 0, b = 0;
-    uint8_t index_arr[2] = {0, res_length - 1}; // 0 for positive, 1 for
+    int dummy_size = 90 / 8;
+    uint8_t index_arr[2] = {0, res_length}; // 0 for positive, 1 for
                                                 // negative
 
+//    printf("\n%d, %d\n", index_arr[0], index_arr[1]);
     for (size_t i = 0; i < op_length; ++i) {
-        index = ((op[i] & 0x80) >> 7) & 0x01;
+//        printf("%d, %d, %d / ", index_arr[0], index_arr[1], op[i]);
+        index = ((op[i] & 0x80) >> 7) & 0x01; // 부호비트 가져오기
         b = (-(uint64_t)op[i]) >> 63;
+//        printf("%d, %d, %d ==>", index, -b, res[index_arr[index]]);
         res[index_arr[index]] ^= (-b) & (res[index_arr[index]] ^ i);
+//        printf("%d\n", res[index_arr[index]]);
+        res[(uint8_t)(index_arr[index] / 8) + 256] |= (b & 1) << (7 - (uint8_t)(index_arr[index] % 8));
         index_arr[index] += op[i];
     }
 
