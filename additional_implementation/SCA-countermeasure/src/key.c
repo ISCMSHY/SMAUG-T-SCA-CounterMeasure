@@ -60,11 +60,6 @@ void genSx_vec(secret_key *sk, const uint8_t seed[CRYPTO_BYTES]) {
     uint8_t res[DIMENSION] = {0};
     uint8_t cnt_arr[MODULE_RANK] = {0};
 
-//    int sk_size = 90 + (90 / 8) + 1;
-//    int sk_size = 256 + 32; // key size + 부호 정보
-    uint16_t sk_size = 256;
-    uint8_t dummy = 32;
-
     hwt(res, cnt_arr, seed, CRYPTO_BYTES, HS);
 
     // cnt_arr가 10의 배수가 되도록 조정, 아니면 어차피 256이니까 128로 고정을 해서 곱셈 연산을 진행해도 괜찮을 듯 하다
@@ -73,22 +68,22 @@ void genSx_vec(secret_key *sk, const uint8_t seed[CRYPTO_BYTES]) {
         (sk->sp_vec[i]).cnt = cnt_arr[i];
 
 //        (sk->sp_vec[i]).sx = (uint8_t *)calloc(cnt_arr[i], sizeof(uint8_t));
-        (sk->sp_vec[i]).sx = (uint8_t *)calloc(sk_size + dummy, sizeof(uint8_t));
+        (sk->sp_vec[i]).sx = (uint8_t *)calloc(SKPOLYVEC_BYTES - 2, sizeof(uint8_t));
 
 //        (sk->sp_vec[i]).neg_start = convToIdx(
 //            (sk->sp_vec[i]).sx, (sk->sp_vec[i]).cnt, res + (i * LWE_N), LWE_N);
 
         (sk->sp_vec[i]).neg_start = convToIdx(
-            (sk->sp_vec[i]).sx, sk_size - 1, res + (i * LWE_N), LWE_N);
+            (sk->sp_vec[i]).sx, HS_O * 2, res + (i * LWE_N), LWE_N);
 
 //        printf("add : %d\n", (sk->sp_vec[i]).neg_start);
 //        printf("sub : %d\n", (sk->sp_vec[i]).cnt - (sk->sp_vec[i]).neg_start);
-//        for (int j = 0; j < LWE_N; j++) {
+//        for (int j = 0; j < HS_O * 2; j++) {
 //            printf("%d ", (sk->sp_vec[i]).sx[j]);
 //        }
 //        printf("\n\n");
-//        for (size_t k = 0; k < 32; k++) {
-//            printf("%d, ", (sk->sp_vec[i]).sx[256 + k]);
+//        for (size_t k = 0; k < HS_O * 2 / 8; k++) {
+//            printf("%d, ", (sk->sp_vec[i]).sx[HS_O * 2 + k]);
 //        }
 //        printf("\n\n");
     }

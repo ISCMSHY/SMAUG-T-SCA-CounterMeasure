@@ -17,6 +17,8 @@
 #define LOG_P2 5                // ciphertext2 modulus
 #define HS 140                  // Hamming weight of coefficient vector s
 #define HR 132                  // Hamming weight of coefficient vector r
+#define HS_O HS                // Hamming weight of coefficient vector s (for optimization)
+#define SKPOLYVEC_BYTES (HS_O*2 + HS_O*2/8 + 2)     // vector of secret polynomials (sparse + sign bit + cnt,neg_start)
 
 #define RD_ADD2 0x0400          // 2^(15 - LOG_P2)
 #define RD_AND2 0xf800          // 2^16 - 2^(16 - LOG_P2)
@@ -33,6 +35,8 @@
 #define LOG_P2 8                // ciphertext2 modulus
 #define HS 198                  // Hamming weight of coefficient vector s
 #define HR 151                  // Hamming weight of coefficient vector r
+#define HS_O 200                // Hamming weight of coefficient vector s (for optimization)
+#define SKPOLYVEC_BYTES (HS_O*2 + HS_O*2/8 + 2)     // vector of secret polynomials (sparse + sign bit + cnt,neg_start)
 
 #define RD_ADD2 0x0080          // 2^(15 - LOG_P2)
 #define RD_AND2 0xff00          // 2^16 - 2^(16 - LOG_P2)
@@ -49,6 +53,8 @@
 #define LOG_P2 6                // ciphertext2 modulus
 #define HS 176                  // Hamming weight of coefficient vector s
 #define HR 160                  // Hamming weight of coefficient vector r
+#define HS_O HS                // Hamming weight of coefficient vector s (for optimization)
+#define SKPOLYVEC_BYTES (HS_O*2 + HS_O*2/8 + 2)     // vector of secret polynomials (sparse + sign bit + cnt,neg_start)
 
 #define RD_ADD2 0x0200          // 2^(15 - LOG_P2)
 #define RD_AND2 0xfc00          // 2^16 - 2^(16 - LOG_P2)
@@ -79,7 +85,8 @@
 #define CTPOLY2_BYTES (LOG_P2 * LWE_N >> 3)                                     // element in R_p'
 
 //#define SKPOLYVEC_BYTES (HS)                                                    // vector of secret polynomials
-#define SKPOLYVEC_BYTES 290                                                      // vector of secret polynomials / CounterMeasure 256 + 32 + 2(cnt, neg_start)
+//#define SKPOLYVEC_BYTES 290                                                      // vector of secret polynomials / CounterMeasure 256 + 32 + 2(cnt, neg_start)
+//#define SKPOLYVEC_BYTES (2 * HS)
 #define CTPOLYVEC_BYTES (CTPOLY1_BYTES * MODULE_RANK)                           // vector with element in R_p
 
 

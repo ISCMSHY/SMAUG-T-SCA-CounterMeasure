@@ -21,7 +21,7 @@ typedef struct {
 } sppoly; // sparse poly
 
 #define convToIdx SMAUG_NAMESPACE(convToIdx)
-uint8_t convToIdx(uint8_t *res, const uint8_t res_length, const uint8_t *op,
+uint8_t convToIdx(uint8_t *res, const uint16_t res_length, const uint8_t *op,
                   const size_t op_length);
 
 #define poly_mult_add SMAUG_NAMESPACE(poly_mult_add)

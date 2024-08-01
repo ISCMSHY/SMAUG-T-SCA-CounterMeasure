@@ -21,32 +21,32 @@ int main(void) {
     printf("\n*** %s with mode %d starts at %s\n", "SMAUG KEM", SMAUG_MODE,
            time_str);
 
-    if (indcpa_test()) {
-        printf("PKE test fails\n");
-    }else {
-        printf("PKE test success\n");
-    }
-
-//    size_t count = 1;
-//    const size_t iteration = 100000;
-//
-//    for (size_t i = 0; i < iteration; ++i) {
-//        if (!(i % (iteration / 10))) {
-//            printf("...%lu%%", count * 10);
-//            fflush(stdout);
-//            ++count;
-//        }
-//
-//         if (indcpa_test()) {
-//             printf("PKE test fails at %lu-th tries\n", i);
-//             break;
-//         }
-//
-//        if (kem_test()) {
-//            printf("KEM test fails at %lu-th tries\n", i);
-//            break;
-//        }
+//    if (indcpa_test()) {
+//        printf("PKE test fails\n");
+//    }else {
+//        printf("PKE test success\n");
 //    }
+
+    size_t count = 1;
+    const size_t iteration = 100000;
+
+    for (size_t i = 0; i < iteration; ++i) {
+        if (!(i % (iteration / 10))) {
+            printf("...%lu%%", count * 10);
+            fflush(stdout);
+            ++count;
+        }
+
+         if (indcpa_test()) {
+             printf("PKE test fails at %lu-th tries\n", i);
+             break;
+         }
+
+        if (kem_test()) {
+            printf("KEM test fails at %lu-th tries\n", i);
+            break;
+        }
+    }
 
     return 0;
 }
@@ -80,7 +80,6 @@ int indcpa_test() {
         printf("\n");
         return 1;
     }
-
     return 0;
 }
 
