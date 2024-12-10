@@ -24,7 +24,7 @@ void load_from_file(uint8_t *ctxt, const char *file_path);
 void save_to_string_sk(uint8_t *output, const secret_key *sk);
 
 #define CM_save_to_string_sk SMAUG_NAMESPACE(CM_save_to_string_sk)
-void CM_save_to_string_sk(uint8_t *output, const secret_key *sk);
+void CM_save_to_string_sk(uint8_t *output, const CM_secret_key *sk);
 
 #define save_to_file_sk SMAUG_NAMESPACE(save_to_file_sk)
 void save_to_file_sk(char *file_path, const uint8_t *sk, const int isPKE);

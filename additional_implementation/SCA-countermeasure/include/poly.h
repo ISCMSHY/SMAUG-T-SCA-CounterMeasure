@@ -20,8 +20,18 @@ typedef struct {
     uint8_t cnt;
 } sppoly; // sparse poly
 
+typedef struct {
+    uint8_t *sx;
+    uint8_t neg_start;
+    uint16_t cnt;
+} CM_sppoly; // sparse poly
+
 #define convToIdx SMAUG_NAMESPACE(convToIdx)
 uint8_t convToIdx(uint8_t *res, const uint16_t res_length, const uint8_t *op,
+                  const size_t op_length);
+
+#define CM_convToIdx SMAUG_NAMESPACE(CM_convToIdx)
+uint8_t CM_convToIdx(uint8_t *res, const uint16_t res_length, const uint8_t *op,
                   const size_t op_length);
 
 #define poly_mult_add SMAUG_NAMESPACE(poly_mult_add)
@@ -34,7 +44,7 @@ void CM_poly_mult_add(poly *res, const poly *op1, const sppoly *op2);
 void poly_mult_sub(poly *res, const poly *op1, const sppoly *op2);
 
 #define CM_poly_mult_sub SMAUG_NAMESPACE(CM_poly_mult_sub)
-void CM_poly_mult_sub(poly *res, const poly *op1, const sppoly *op2);
+void CM_poly_mult_sub(poly *res, const poly *op1, const CM_sppoly *op2);
 
 #define vec_vec_mult_add SMAUG_NAMESPACE(vec_vec_mult_add)
 void vec_vec_mult_add(poly *res, const polyvec *op1,
@@ -54,7 +64,7 @@ void matrix_vec_mult_sub(polyvec *res, const polyvec op1[MODULE_RANK],
 
 #define CM_matrix_vec_mult_sub SMAUG_NAMESPACE(CM_matrix_vec_mult_sub)
 void CM_matrix_vec_mult_sub(polyvec *res, const polyvec op1[MODULE_RANK],
-                         const sppoly op2[MODULE_RANK], int16_t transpose);
+                         const CM_sppoly op2[MODULE_RANK], int16_t transpose);
 
 void poly_reduce_keyGen(poly *res, const uint16_t temp[2 * LWE_N]);
 void FisherYates(uint8_t *arr, int n);

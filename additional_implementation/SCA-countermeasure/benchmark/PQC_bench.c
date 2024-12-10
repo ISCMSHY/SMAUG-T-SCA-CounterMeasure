@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <mach/mach.h>
 
 #include "kem.h"
 #include "parameters.h"
@@ -9,13 +10,20 @@
 
 uint64_t t[TEST_LOOP];
 
+#ifdef __aarch64__
+uint64_t cpucycles(void) {
+    uint64_t cycles;
+    asm volatile("mrs %0, cntvct_el0" : "=r"(cycles));
+    return cycles;
+}
+#else
 int64_t cpucycles(void) {
     unsigned int hi, lo;
-
-    __asm__ __volatile__("rdtsc\n\t" : "=a"(lo), "=d"(hi));
-
+    __asm__ __volatile__("rdtsc\n\t" : "=a" (lo), "=d" (hi));
     return ((int64_t)lo) | (((int64_t)hi) << 32);
 }
+#endif
+
 
 int PQC_bench(void) {
     unsigned char pk[PUBLICKEY_BYTES]; // CRYPTO_PUBLICKEYBYTES->PUBLICKEY_BYTES
@@ -29,6 +37,7 @@ int PQC_bench(void) {
 
     unsigned long long kcycles;
     unsigned long long cycles1, cycles2;
+    unsigned long bytes1, bytes2;
 
     printf("BENCHMARK ENVIRONMENTS  ============================= \n");
     printf("CRYPTO_PUBLICKEYBYTES: %d\n", PUBLICKEY_BYTES);
@@ -42,6 +51,7 @@ int PQC_bench(void) {
     for (int i = 0; i < TEST_LOOP; i++) {
         cycles1 = cpucycles();
         crypto_kem_keypair(pk, sk);
+//        CM_crypto_kem_keypair(pk, sk);
         cycles2 = cpucycles();
         kcycles += cycles2 - cycles1;
     }
@@ -67,6 +77,7 @@ int PQC_bench(void) {
     for (int i = 0; i < TEST_LOOP; i++) {
         cycles1 = cpucycles();
         crypto_kem_dec(ss2, ctxt, sk);
+//        CM_crypto_kem_dec(ss2, ctxt, sk);
         cycles2 = cpucycles();
         kcycles += cycles2 - cycles1;
     }

@@ -10,5 +10,7 @@
 int verify(const uint8_t *a, const uint8_t *b, size_t len);
 #define cmov SMAUG_NAMESPACE(cmov)
 void cmov(uint8_t *r, const uint8_t *x, size_t len, uint8_t b);
+#define CM_cmov SMAUG_NAMESPACE(CM_cmov)
+void CM_cmov(uint8_t *r, const uint16_t *x, size_t len, uint8_t b);
 
 #endif

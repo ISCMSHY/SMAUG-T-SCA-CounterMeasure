@@ -38,20 +38,71 @@ void genRx_vec(sppoly r[MODULE_RANK], const uint8_t *input,
  *                (a structure composed of (vector s, t, vector negstart))
  **************************************************/
 void indcpa_keypair(uint8_t pk[PUBLICKEY_BYTES],
-                    uint8_t sk[PKE_SECRETKEY_BYTES]) {
+                    uint8_t sk[PKE_SECRETKEY_BYTES], uint8_t static_seed[CRYPTO_BYTES]) {
     public_key pk_tmp;
     secret_key sk_tmp;
     memset(&pk_tmp, 0, sizeof(public_key));
     memset(&sk_tmp, 0, sizeof(secret_key));
 
     uint8_t seed[CRYPTO_BYTES + PKSEED_BYTES] = {0};
-    randombytes(seed, CRYPTO_BYTES);
+//    randombytes(seed, CRYPTO_BYTES);
+
+    for(int i = 0; i < CRYPTO_BYTES; i++){
+        seed[i] = static_seed[i];
+    }
+
     shake256(seed, CRYPTO_BYTES + PKSEED_BYTES, seed, CRYPTO_BYTES);
 
     genSx_vec(&sk_tmp, seed);
 
+//    for(int i = 0; i < MODULE_RANK; i++){
+//        for(int j = 0; j < sk_tmp.sp_vec[i].cnt; j++){
+//            printf("0x%x ", sk_tmp.sp_vec[i].sx[j]);
+//        }
+//        printf("\n--------------------------------\n");
+//    }
+
     memcpy(&pk_tmp.seed, seed + CRYPTO_BYTES, PKSEED_BYTES);
     genPubkey(&pk_tmp, &sk_tmp, seed);
+
+    memset(pk, 0, PUBLICKEY_BYTES);
+    memset(sk, 0, PKE_SECRETKEY_BYTES);
+    save_to_string_pk(pk, &pk_tmp);
+    save_to_string_sk(sk, &sk_tmp);
+
+    for (size_t i = 0; i < MODULE_RANK; ++i) {
+        memset(sk_tmp.sp_vec[i].sx, 0, sk_tmp.sp_vec[i].cnt);
+        free(sk_tmp.sp_vec[i].sx);
+    }
+}
+
+void CM_indcpa_keypair(uint8_t pk[PUBLICKEY_BYTES],
+                    uint8_t sk[PKE_SECRETKEY_BYTES], uint8_t static_seed[CRYPTO_BYTES]){
+
+    public_key pk_tmp;
+    CM_secret_key sk_tmp;
+    memset(&pk_tmp, 0, sizeof(public_key));
+    memset(&sk_tmp, 0, sizeof(secret_key));
+
+    uint8_t seed[CRYPTO_BYTES + PKSEED_BYTES] = {0};
+//    randombytes(seed, CRYPTO_BYTES);
+
+    for(int i = 0; i < CRYPTO_BYTES; i++){
+        seed[i] = static_seed[i];
+    }
+
+    shake256(seed, CRYPTO_BYTES + PKSEED_BYTES, seed, CRYPTO_BYTES);
+
+    CM_genSx_vec(&sk_tmp, seed);
+//    for(int i = 0; i < MODULE_RANK; i++){
+//        for(int j = 0; j < sk_tmp.sp_vec[i].cnt; j++){
+//            printf("0x%x ", sk_tmp.sp_vec[i].sx[j]);
+//        }
+//        printf("\n--------------------------------\n");
+//    }
+
+    memcpy(&pk_tmp.seed, seed + CRYPTO_BYTES, PKSEED_BYTES);
+    CM_genPubkey(&pk_tmp, &sk_tmp, seed);
 
     memset(pk, 0, PUBLICKEY_BYTES);
     memset(sk, 0, PKE_SECRETKEY_BYTES);
@@ -124,6 +175,54 @@ void indcpa_enc(uint8_t ctxt[CIPHERTEXT_BYTES],
  *                (a structure composed of (vector c1, c2))
  **************************************************/
 void indcpa_dec(uint8_t delta[DELTA_BYTES],
+                const uint8_t sk[PKE_SECRETKEY_BYTES],
+                const uint8_t ctxt[CIPHERTEXT_BYTES]) {
+    poly delta_temp;
+    polyvec c1_temp;
+
+    secret_key sk_tmp;
+    memset(&sk_tmp, 0, sizeof(secret_key));
+
+    load_from_string_sk(&sk_tmp, sk);
+//    CM_load_from_string_sk(&sk_tmp, sk);
+
+    ciphertext ctxt_tmp;
+    load_from_string(&ctxt_tmp, ctxt);
+
+    c1_temp = ctxt_tmp.c1;
+    delta_temp = ctxt_tmp.c2;
+    for (uint16_t i = 0; i < LWE_N; ++i)
+        delta_temp.coeffs[i] <<= _16_LOG_P2;
+    for (size_t i = 0; i < MODULE_RANK; ++i)
+        for (size_t j = 0; j < LWE_N; ++j)
+            c1_temp.vec[i].coeffs[j] <<= _16_LOG_P;
+
+    // Compute delta = (delta + c1^T * s)
+    vec_vec_mult_add(&delta_temp, &c1_temp, sk_tmp.sp_vec);
+//    CM_vec_vec_mult_add(&delta_temp, &c1_temp, sk_tmp.sp_vec);
+
+    // Compute delta = 2/p * delta
+    for (uint16_t i = 0; i < LWE_N; ++i) {
+        delta_temp.coeffs[i] += DEC_ADD;
+        delta_temp.coeffs[i] >>= _16_LOG_T;
+    }
+
+    // Set delta
+    memset(delta, 0, DELTA_BYTES);
+    for (size_t i = 0; i < DELTA_BYTES; ++i) {
+        for (uint8_t j = 0; j < 8; ++j) {
+            delta[i] ^= ((uint8_t)(delta_temp.coeffs[8 * i + j]) << j);
+        }
+    }
+
+    for (size_t i = 0; i < MODULE_RANK; ++i) {
+        memset(sk_tmp.sp_vec[i].sx, 0, sk_tmp.sp_vec[i].cnt);
+        free(sk_tmp.sp_vec[i].sx);
+    }
+}
+
+
+void CM_indcpa_dec(uint8_t delta[DELTA_BYTES],
                 const uint8_t sk[PKE_SECRETKEY_BYTES],
                 const uint8_t ctxt[CIPHERTEXT_BYTES]) {
     poly delta_temp;

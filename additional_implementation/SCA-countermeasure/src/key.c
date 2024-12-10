@@ -39,7 +39,17 @@ void genBx(polyvec *b, const polyvec A[MODULE_RANK],
     addGaussianErrorVec(b, e_seed);
 
     // b = -a * s + e
-//    matrix_vec_mult_sub(b, A, s_vec, 0);
+    matrix_vec_mult_sub(b, A, s_vec, 0);
+//    CM_matrix_vec_mult_sub(b, A, s_vec, 0);
+}
+
+void CM_genBx(polyvec *b, const polyvec A[MODULE_RANK],
+           const CM_sppoly s_vec[MODULE_RANK],
+           const uint8_t e_seed[CRYPTO_BYTES]) {
+    // b = e
+    addGaussianErrorVec(b, e_seed);
+
+    // b = -a * s + e
     CM_matrix_vec_mult_sub(b, A, s_vec, 0);
 }
 
@@ -66,15 +76,44 @@ void genSx_vec(secret_key *sk, const uint8_t seed[CRYPTO_BYTES]) {
 
     for (size_t i = 0; i < MODULE_RANK; ++i) {
         (sk->sp_vec[i]).cnt = cnt_arr[i];
-
-//        (sk->sp_vec[i]).sx = (uint8_t *)calloc(cnt_arr[i], sizeof(uint8_t));
-        (sk->sp_vec[i]).sx = (uint8_t *)calloc(SKPOLYVEC_BYTES - 2, sizeof(uint8_t));
-
-//        (sk->sp_vec[i]).neg_start = convToIdx(
-//            (sk->sp_vec[i]).sx, (sk->sp_vec[i]).cnt, res + (i * LWE_N), LWE_N);
-
+        (sk->sp_vec[i]).sx = (uint8_t *)calloc(cnt_arr[i], sizeof(uint8_t));
         (sk->sp_vec[i]).neg_start = convToIdx(
+            (sk->sp_vec[i]).sx, (sk->sp_vec[i]).cnt, res + (i * LWE_N), LWE_N);
+
+        for (int j = 0; j < cnt_arr[i]; j++) {
+            printf("0x%x ", (sk->sp_vec[i]).sx[j]);
+        }
+
+//        printf("add : %d\n", (sk->sp_vec[i]).neg_start);
+//        printf("sub : %d\n", (sk->sp_vec[i]).cnt - (sk->sp_vec[i]).neg_start);
+//        for (int j = 0; j < HS_O * 2; j++) {
+//            printf("%d ", (sk->sp_vec[i]).sx[j]);
+//        }
+//        printf("\n\n");
+//        for (size_t k = 0; k < HS_O * 2 / 8; k++) {
+//            printf("%d, ", (sk->sp_vec[i]).sx[HS_O * 2 + k]);
+//        }
+//        printf("\n\n");
+    }
+}
+
+void CM_genSx_vec(CM_secret_key *sk, const uint8_t seed[CRYPTO_BYTES]){
+    uint8_t res[DIMENSION] = {0};
+    uint8_t cnt_arr[MODULE_RANK] = {0};
+
+    hwt(res, cnt_arr, seed, CRYPTO_BYTES, HS);
+
+    // cnt_arr가 10의 배수가 되도록 조정, 아니면 어차피 256이니까 128로 고정을 해서 곱셈 연산을 진행해도 괜찮을 듯 하다
+
+    for (size_t i = 0; i < MODULE_RANK; ++i) {
+        (sk->sp_vec[i]).cnt = SKPOLYVEC_BYTES - 2;
+        (sk->sp_vec[i]).sx = (uint8_t *)calloc(SKPOLYVEC_BYTES - 2, sizeof(uint8_t));
+        (sk->sp_vec[i]).neg_start = CM_convToIdx(
             (sk->sp_vec[i]).sx, HS_O * 2, res + (i * LWE_N), LWE_N);
+
+        for (int j = 0; j < HS_O * 2; j++) {
+            printf("0x%x ", (sk->sp_vec[i]).sx[j]);
+        }
 
 //        printf("add : %d\n", (sk->sp_vec[i]).neg_start);
 //        printf("sub : %d\n", (sk->sp_vec[i]).cnt - (sk->sp_vec[i]).neg_start);
@@ -107,6 +146,16 @@ void genPubkey(public_key *pk, const secret_key *sk,
     memset(&(pk->b), 0, sizeof(uint16_t) * LWE_N);
     // Initialized at addGaussian, Unnecessary
     genBx(&(pk->b), pk->A, sk->sp_vec, err_seed);
+}
+
+void CM_genPubkey(public_key *pk, const CM_secret_key *sk,
+               const uint8_t err_seed[CRYPTO_BYTES]) {
+    shake128(pk->seed, PKSEED_BYTES, pk->seed, PKSEED_BYTES);
+    genAx(pk->A, pk->seed);
+
+    memset(&(pk->b), 0, sizeof(uint16_t) * LWE_N);
+    // Initialized at addGaussian, Unnecessary
+    CM_genBx(&(pk->b), pk->A, sk->sp_vec, err_seed);
 }
 
 /////////////////////////////////////////////////////////////////////////////

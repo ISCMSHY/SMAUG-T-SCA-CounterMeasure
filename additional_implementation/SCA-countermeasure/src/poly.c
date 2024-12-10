@@ -13,7 +13,7 @@
  *              - uint16_t deg: degree from sparse polynomial
  **************************************************/
 inline void __attribute__((always_inline))
-poly_add(uint16_t res[3 * LWE_N], const poly *op1, const uint8_t deg) {
+poly_add(uint16_t res[2 * LWE_N], const poly *op1, const uint8_t deg) {
     for (size_t i = 0; i < LWE_N; ++i)
         res[deg + i] += op1->coeffs[i];
 }
@@ -34,7 +34,7 @@ CM_poly_add(uint16_t res[3 * LWE_N], const poly *op1, const uint16_t deg) {
  *              - uint16_t deg: degree from sparse polynomial
  **************************************************/
 inline void __attribute__((always_inline))
-poly_sub(uint16_t res[3 * LWE_N], const poly *op1, const uint8_t deg) {
+poly_sub(uint16_t res[2 * LWE_N], const poly *op1, const uint8_t deg) {
     for (size_t i = 0; i < LWE_N; ++i)
         res[deg + i] -= op1->coeffs[i];
 }
@@ -105,15 +105,12 @@ void poly_mult_add(poly *res, const poly *op1, const sppoly *op2) {
 
 void CM_poly_mult_add(poly *res, const poly *op1, const sppoly *op2) {
     uint16_t temp[LWE_N * 3] = {0};
-
     for (size_t j = 0; j < HS_O; j++) {
-        CM_poly_add(temp, op1, (op2->sx)[j] + 512 * ((op2->sx)[HS_O * 2 + j / 8] >> (7 - j % 8) & 1 ^ 1));
+        CM_poly_add(temp, op1, (op2->sx)[j] + (LWE_N * 2) * ((op2->sx)[HS_O * 2 + j / 8] >> (7 - j % 8) & 1 ^ 1));
     }
-
     for (size_t j = HS_O; j < HS_O * 2; j++) {
-        CM_poly_sub(temp, op1, (op2->sx)[j] + 512 * ((op2->sx)[HS_O * 2 + j / 8] >> (7 - j % 8) & 1 ^ 1));
+        CM_poly_sub(temp, op1, (op2->sx)[j] + (LWE_N * 2) * ((op2->sx)[HS_O * 2 + j / 8] >> (7 - j % 8) & 1 ^ 1));
     }
-
     poly_reduce(res, temp);
 }
 
@@ -144,7 +141,7 @@ void poly_mult_sub(poly *res, const poly *op1, const sppoly *op2) {
     poly_reduce_keyGen(res, temp);	
 }
 
-void CM_poly_mult_sub(poly *res, const poly *op1, const sppoly *op2) {
+void CM_poly_mult_sub(poly *res, const poly *op1, const CM_sppoly *op2) {
     uint16_t temp[LWE_N * 3] = {0};
 
     for (size_t j = 0; j < HS_O; j++) {
@@ -225,7 +222,7 @@ void matrix_vec_mult_sub(polyvec *res, const polyvec op1[MODULE_RANK],
 }
 
 void CM_matrix_vec_mult_sub(polyvec *res, const polyvec op1[MODULE_RANK],
-                         const sppoly op2[MODULE_RANK], int16_t transpose) {
+                         const CM_sppoly op2[MODULE_RANK], int16_t transpose) {
 
     for (int i = 0; i < MODULE_RANK; i++) {
         for (int j = 0; j < MODULE_RANK; j++) {
@@ -285,21 +282,36 @@ void CM_vec_vec_mult_add(poly *res, const polyvec *op1, const sppoly op2[MODULE_
  * Returns neg_start(success) or 0(failure).
  **************************************************/
 uint8_t convToIdx(uint8_t *res, const uint16_t res_length, const uint8_t *op,
+                  const size_t op_length) {
+    uint8_t index = 0, b = 0;
+    uint8_t index_arr[2] = {0, res_length - 1}; // 0 for positive, 1 for
+                                                // negative
+    for (size_t i = 0; i < op_length; ++i) {
+        index = ((op[i] & 0x80) >> 7) & 0x01;
+        b = (-(uint64_t)op[i]) >> 63;
+        res[index_arr[index]] ^= (-b) & (res[index_arr[index]] ^ i);
+        index_arr[index] += op[i];
+    }
+
+    return index_arr[0];
+}
+
+uint8_t CM_convToIdx(uint8_t *res, const uint16_t res_length, const uint8_t *op,
                   const size_t op_length) {;
     uint8_t index = 0, b = 0;
-    uint16_t index_arr[2] = {0, res_length - 1}; // 0 for positive, 1 for
+    uint16_t index_arr[2] = {res_length - 1, 0}; // 0 for positive, 1 for
                                                 // negative
 
-//    printf("\n%d, %d\n", index_arr[0], index_arr[1]);
+    printf("\n%d, %d\n", index_arr[0], index_arr[1]);
     for (size_t i = 0; i < op_length; ++i) {
-//        printf("%d, %d, %d / ", index_arr[0], index_arr[1], op[i]);
+        printf("%d, %d, %d / ", index_arr[0], index_arr[1], op[i]);
         index = ((op[i] & 0x80) >> 7) & 0x01; // 부호비트 가져오기
         b = (-(uint64_t)op[i]) >> 63;
-//        printf("%d, %d, %d ==>", index, -b, res[index_arr[index]]);
-        res[index_arr[index]] ^= (-b) & (res[index_arr[index]] ^ op_length - (1 + i));
-//        printf("%d\n", res[index_arr[index]]);
+        printf("%d, %d, %d, %d ==>", index, -b, index_arr[index], res[index_arr[index]]);
+        res[index_arr[index]] ^= (-b) & (res[index_arr[index]] ^ i);
+        printf("%d\n", res[index_arr[index]]);
         res[(uint8_t)(index_arr[index] / 8) + HS_O * 2] |= (b & 1) << (7 - (uint8_t)(index_arr[index] % 8)); // 부호비트 저장
-        index_arr[index] += (int8_t)op[i];
+        index_arr[index] -= (int8_t)op[i];
     }
 
     return index_arr[0];

@@ -56,12 +56,12 @@ void save_to_string_sk(uint8_t *output, const secret_key *sk) {
     }
 }
 
-void CM_save_to_string_sk(uint8_t *output, const secret_key *sk) {
+void CM_save_to_string_sk(uint8_t *output, const CM_secret_key *sk) {
     size_t idx = 0;
 
     // cnt 값 저장
     for (size_t i = 0; i < MODULE_RANK; ++i) {
-        cmov(output + idx, &(sk->sp_vec[i].cnt), sizeof(uint8_t), 1);
+        CM_cmov(output + idx, &(sk->sp_vec[i].cnt), sizeof(uint8_t), 1);
         idx += sizeof(uint8_t);
     }
 
@@ -74,6 +74,7 @@ void CM_save_to_string_sk(uint8_t *output, const secret_key *sk) {
 
     // neg_start 값 저장
     for (size_t i = 0; i < MODULE_RANK; ++i) {
+        // eng_start는 uint8이기에 CM_cmov 안써도 된다
         cmov(output + idx, &(sk->sp_vec[i].neg_start), sizeof(uint8_t), 1);
         idx += sizeof(uint8_t);
     }

@@ -11,9 +11,17 @@
 
 #define crypto_kem_keypair SMAUG_NAMESPACE(crypto_kem_keypair)
 void crypto_kem_keypair(uint8_t *pk, uint8_t *sk);
+
+#define CM_crypto_kem_keypair SMAUG_NAMESPACE(CM_crypto_kem_keypair)
+void CM_crypto_kem_keypair(uint8_t *pk, uint8_t *sk);
+
 #define crypto_kem_enc SMAUG_NAMESPACE(crypto_kem_enc)
 int crypto_kem_enc(uint8_t *ctxt, uint8_t *ss, const uint8_t *pk);
+
 #define crypto_kem_dec SMAUG_NAMESPACE(crypto_kem_dec)
 int crypto_kem_dec(uint8_t *ss, const uint8_t *ctxt, const uint8_t *sk);
+
+#define CM_crypto_kem_dec SMAUG_NAMESPACE(CM_crypto_kem_dec)
+int CM_crypto_kem_dec(uint8_t *ss, const uint8_t *ctxt, const uint8_t *sk);
 
 #endif // SMAUG_KEM_H

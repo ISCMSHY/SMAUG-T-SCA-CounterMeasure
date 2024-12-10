@@ -15,7 +15,11 @@ void genRx_vec(sppoly r[MODULE_RANK], const uint8_t *input,
 
 #define indcpa_keypair SMAUG_NAMESPACE(indcpa_keypair)
 void indcpa_keypair(uint8_t pk[PUBLICKEY_BYTES],
-                    uint8_t sk[PKE_SECRETKEY_BYTES]);
+                    uint8_t sk[PKE_SECRETKEY_BYTES], uint8_t static_seed[CRYPTO_BYTES]);
+
+#define CM_indcpa_keypair SMAUG_NAMESPACE(CM_indcpa_keypair)
+void CM_indcpa_keypair(uint8_t pk[PUBLICKEY_BYTES],
+                    uint8_t sk[PKE_SECRETKEY_BYTES], uint8_t static_seed[CRYPTO_BYTES]);
 
 #define indcpa_enc SMAUG_NAMESPACE(indcpa_enc)
 void indcpa_enc(uint8_t ctxt[CIPHERTEXT_BYTES],
@@ -24,6 +28,11 @@ void indcpa_enc(uint8_t ctxt[CIPHERTEXT_BYTES],
 
 #define indcpa_dec SMAUG_NAMESPACE(indcpa_dec)
 void indcpa_dec(uint8_t delta[DELTA_BYTES],
+                const uint8_t sk[PKE_SECRETKEY_BYTES],
+                const uint8_t ctxt[CIPHERTEXT_BYTES]);
+
+#define CM_indcpa_dec SMAUG_NAMESPACE(CM_indcpa_dec)
+void CM_indcpa_dec(uint8_t delta[DELTA_BYTES],
                 const uint8_t sk[PKE_SECRETKEY_BYTES],
                 const uint8_t ctxt[CIPHERTEXT_BYTES]);
 
